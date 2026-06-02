@@ -2392,5 +2392,355 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1500);
 });
 </script>
+  <!-- ==================== شات إسلامي مع دعاء متغير وكتابة حرفية ==================== -->
+<div id="chatWidget" class="fixed bottom-20 left-4 z-50">  
+  <button id="chatToggle" class="w-14 h-14 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-2xl hover:scale-105 transition transform flex items-center justify-center">  
+    <i class="fas fa-comment-dots text-2xl"></i>  
+  </button>  
+  
+  <div id="chatBox" class="hidden fixed bottom-28 left-4 w-[450px] h-[600px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col z-50">  
+    <!-- رأس الشات مع الدعاء المتغير -->
+    <div class="bg-gradient-to-r from-green-700 to-emerald-700 text-white p-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <i class="fas fa-mosque mr-2"></i>
+          <span class="font-bold">المساعد الإسلامي</span>
+        </div>
+        <button id="chatClose" class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center">  
+          <i class="fas fa-times"></i>  
+        </button>
+      </div>
+      <!-- الدعاء المتغير -->
+      <div id="rotatingDua" class="text-sm italic text-center mt-2 pt-2 border-t border-white/30 opacity-90">
+        <i class="fas fa-hand-peace-o mr-1"></i>
+        <span id="duaText">اللهم صل على محمد</span>
+      </div>
+    </div>  
+    
+    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">  
+      <!-- رسالة الترحيب ستظهر هنا -->
+    </div>  
+    
+    <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex gap-2 bg-white dark:bg-gray-800">  
+      <input type="text" id="chatInput" placeholder="اسأل عن أي شيء ديني..."   
+             class="flex-1 px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:border-green-500">  
+      <button id="chatSend" class="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white">  
+        <i class="fas fa-paper-plane"></i>  
+      </button>  
+    </div>  
+    
+    <div class="text-center text-xs text-gray-500 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">  
+      يعمل بتقنية MuslimGPT
+    </div>  
+  </div>  
+</div>  
+
+<style>  
+@keyframes bounce {  
+  0%, 60%, 100% { transform: translateY(0); }  
+  30% { transform: translateY(-10px); }  
+}  
+.animate-bounce {  
+  animation: bounce 1s infinite;  
+}
+
+/* تحسين شكل الشريط الجانبي */
+#chatMessages::-webkit-scrollbar {
+  width: 6px;
+}
+#chatMessages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+#chatMessages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+#chatMessages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* مؤشر الكتابة الحرفية */
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background-color: currentColor;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* للهواتف الصغيرة */
+@media (max-width: 640px) {
+  #chatBox {
+    width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 80px !important;
+    height: 70vh !important;
+  }
+}
+</style>  
+
+<script>  
+(function() {  
+  const chatToggle = document.getElementById('chatToggle');  
+  const chatBox = document.getElementById('chatBox');  
+  const chatClose = document.getElementById('chatClose');  
+  const chatInput = document.getElementById('chatInput');  
+  const chatSend = document.getElementById('chatSend');  
+  const chatMessages = document.getElementById('chatMessages');  
+  
+  // ==================== الأدعية المتغيرة ====================
+  const duas = [
+    "اللهم صل على محمد وعلى آل محمد",
+    "سبحان الله وبحمده سبحان الله العظيم",
+    "اللهم اغفر لي وارحمني",
+    "حسبي الله لا إله إلا هو عليه توكلت",
+    "اللهم إني أسألك العفو والعافية",
+    "لا إله إلا أنت سبحانك إني كنت من الظالمين",
+    "اللهم بارك لنا في ما رزقتنا",
+    "اللهم أجعلني من التوابين وأجعلني من المتطهرين",
+    "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة",
+    "اللهم أعنا على ذكرك وشكرك وحسن عبادتك"
+  ];
+  
+  let duaIndex = 0;
+  const duaElement = document.getElementById('duaText');
+  
+  // تغيير الدعاء كل 3 ثواني
+  setInterval(() => {
+    duaIndex = (duaIndex + 1) % duas.length;
+    if (duaElement) {
+      duaElement.style.opacity = '0';
+      setTimeout(() => {
+        duaElement.textContent = duas[duaIndex];
+        duaElement.style.opacity = '1';
+      }, 200);
+    }
+  }, 3000);
+  
+  // ==================== إعدادات الشات ====================
+  const BOT_API_URL = 'https://muslimgpt.onrender.com/chat';
+  
+  let visitorId = localStorage.getItem('visitorId');
+  if (!visitorId) {
+    visitorId = 'web_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    localStorage.setItem('visitorId', visitorId);
+  }
+  
+  let messageHistory = [];
+  const savedHistory = localStorage.getItem('chatHistory_' + visitorId);
+  if (savedHistory) {
+    try {
+      messageHistory = JSON.parse(savedHistory);
+      messageHistory.forEach(msg => {
+        if (!msg.isTyping) {
+          addMessageToUI(msg.text, msg.isUser, false);
+        }
+      });
+    } catch(e) {}
+  } else {
+    // رسالة الترحيب
+    addWelcomeMessage();
+  }
+  
+  let isLoading = false;
+  let currentTypingInterval = null;
+  
+  function addWelcomeMessage() {
+    const welcomeText = "السلام عليكم! أنا المساعد الإسلامي، أجب عن أسئلتك الدينية 📖";
+    addMessageWithTyping(welcomeText, false);
+  }
+  
+  function saveHistory() {
+    const toSave = messageHistory.filter(m => !m.isTyping).slice(-50);
+    localStorage.setItem('chatHistory_' + visitorId, JSON.stringify(toSave));
+  }
+  
+  // إضافة رسالة مع تأثير الكتابة الحرفية
+  async function addMessageWithTyping(text, isUser = false) {
+    const div = document.createElement('div');  
+    div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`;  
+    
+    const bubbleDiv = document.createElement('div');  
+    bubbleDiv.className = `${isUser ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'} rounded-2xl ${isUser ? 'rounded-tl-none' : 'rounded-tr-none'} p-3 max-w-[85%] break-words`;  
+    
+    const contentSpan = document.createElement('span');
+    contentSpan.className = 'text-sm leading-relaxed';
+    contentSpan.innerHTML = '';
+    
+    const cursorSpan = document.createElement('span');
+    cursorSpan.className = 'typing-cursor';
+    cursorSpan.innerHTML = '';
+    
+    bubbleDiv.appendChild(contentSpan);
+    bubbleDiv.appendChild(cursorSpan);
+    div.appendChild(bubbleDiv);
+    chatMessages.appendChild(div);  
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // الكتابة حرف حرف
+    let i = 0;
+    const speed = 15; // ميلي ثانية لكل حرف (سريعة)
+    
+    return new Promise((resolve) => {
+      function typeNextChar() {
+        if (i < text.length) {
+          let char = text[i];
+          if (char === '\n') {
+            contentSpan.innerHTML += '<br>';
+          } else {
+            contentSpan.innerHTML += char;
+          }
+          i++;
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          setTimeout(typeNextChar, speed);
+        } else {
+          cursorSpan.remove();
+          resolve();
+        }
+      }
+      typeNextChar();
+    });
+  }
+  
+  // إضافة رسالة عادية (للمستخدم أو للحفظ)
+  function addMessageToUI(text, isUser = false, save = true) {  
+    const div = document.createElement('div');  
+    div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`;  
+    
+    let safeText = text;
+    if (typeof text === 'string') {
+      safeText = text.replace(/[&<>]/g, function(m) {  
+        if (m === '&') return '&amp;';  
+        if (m === '<') return '&lt;';  
+        if (m === '>') return '&gt;';  
+        return m;  
+      });
+      safeText = safeText.replace(/(https?:\/\/[^\s]+)/g, '$1');
+    }
+    
+    div.innerHTML = `  
+      <div class="${isUser ? 'bg-green-600 text-white rounded-2xl rounded-tl-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tr-none'} p-3 max-w-[85%] break-words">  
+        <div class="text-sm leading-relaxed">${safeText}</div>  
+      </div>  
+    `;  
+    chatMessages.appendChild(div);  
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    if (save) {
+      messageHistory.push({ text: text, isUser: isUser, timestamp: Date.now(), isTyping: false });
+      saveHistory();
+    }
+  }  
+    
+  function addTypingIndicator() {  
+    const div = document.createElement('div');  
+    div.id = 'typingIndicator';  
+    div.className = 'flex justify-start mb-2';  
+    div.innerHTML = `  
+      <div class="bg-gray-200 dark:bg-gray-700 rounded-2xl rounded-tr-none p-3">  
+        <div class="flex gap-1">  
+          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay:0ms"></span>  
+          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay:150ms"></span>  
+          <span class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay:300ms"></span>  
+        </div>  
+      </div>  
+    `;  
+    chatMessages.appendChild(div);  
+    chatMessages.scrollTop = chatMessages.scrollHeight;  
+  }  
+    
+  function removeTypingIndicator() {  
+    const indicator = document.getElementById('typingIndicator');  
+    if (indicator) indicator.remove();  
+  }  
+    
+  async function sendMessage(message) {  
+    if (isLoading || !message.trim()) return;  
+    isLoading = true;  
+    
+    addMessageToUI(message, true);
+    chatInput.value = '';  
+    addTypingIndicator();  
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
+    try {  
+      const response = await fetch(BOT_API_URL, {  
+        method: 'POST',  
+        headers: { 'Content-Type': 'application/json' },  
+        signal: controller.signal,
+        body: JSON.stringify({ message: message, visitor_id: visitorId })  
+      });  
+      
+      clearTimeout(timeoutId);
+      const data = await response.json();  
+      removeTypingIndicator();  
+      
+      if (data.reply) {
+        // عرض الرد بتأثير الكتابة الحرفية
+        await addMessageWithTyping(data.reply, false);
+        // حفظ الرد في التاريخ
+        messageHistory.push({ text: data.reply, isUser: false, timestamp: Date.now(), isTyping: false });
+        saveHistory();
+      } else if (data.error) {  
+        addMessageToUI('⚠️ ' + data.error, false);  
+      } else {  
+        addMessageToUI('⚠️ عذراً، حدث خطأ في البوت.', false);  
+      }  
+    } catch (error) {  
+      clearTimeout(timeoutId);
+      removeTypingIndicator();  
+      if (error.name === 'AbortError') {
+        await addMessageWithTyping('⏰ الرد يطول، الخادم بطيء. حاول مرة أخرى.', false);
+      } else {
+        addMessageToUI('⚠️ خطأ في الاتصال بالخادم.', false);
+      }
+    }  
+    isLoading = false;  
+  }  
+    
+  function addClearButton() {
+    const clearBtn = document.createElement('button');
+    clearBtn.innerHTML = '🧹';
+    clearBtn.className = 'w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center ml-2';
+    clearBtn.title = 'مسح المحادثة';
+    clearBtn.onclick = () => {
+      if (confirm('هل تريد مسح سجل المحادثة؟')) {
+        messageHistory = [];
+        localStorage.removeItem('chatHistory_' + visitorId);
+        chatMessages.innerHTML = '';
+        addWelcomeMessage();
+      }
+    };
+    const headerFirstDiv = document.querySelector('#chatBox .bg-gradient-to-r .flex');
+    if (headerFirstDiv && !document.querySelector('#chatBox .bg-gradient-to-r button:last-child')) {
+      headerFirstDiv.appendChild(clearBtn);
+    }
+  }
+  
+  chatToggle.onclick = () => {  
+    chatBox.classList.toggle('hidden');  
+    if (!chatBox.classList.contains('hidden')) {
+      chatInput.focus();
+      addClearButton();
+    }
+  };  
+  chatClose.onclick = () => chatBox.classList.add('hidden');  
+  chatSend.onclick = () => sendMessage(chatInput.value);  
+  chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(chatInput.value); };  
+  
+  setTimeout(addClearButton, 100);
+})();  
+  </script>
 </body>
 </html>
